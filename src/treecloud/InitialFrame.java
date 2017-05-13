@@ -16,6 +16,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -57,6 +58,7 @@ public class InitialFrame extends JFrame{
 	private JRadioButton concordance = new JRadioButton("Concordance");
 	private JCheckBox removestopwords = new JCheckBox("Remove stopwords");
 	private ButtonGroup formulas = new ButtonGroup();
+	private JProgressBar progress = new JProgressBar();
 	
 	public void showFrame() {
 		
@@ -68,7 +70,7 @@ public class InitialFrame extends JFrame{
 	private void constructFrame() {
 		
 		this.setTitle("TreeCloud");
-		this.setSize(850, 400);
+		this.setSize(850, 450);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setLayout(new GridLayout(7,1));
 		
@@ -85,7 +87,6 @@ public class InitialFrame extends JFrame{
 		importTextButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				showImportDialog();
-				drawButton.setEnabled(true);
 			}
 			
 		});
@@ -118,6 +119,7 @@ public class InitialFrame extends JFrame{
 					 */
 					if (!res.equals("")) {
 						importedStopwords.setText("");
+						stopwordspath = null;
 					}
 					
 				}
@@ -126,14 +128,16 @@ public class InitialFrame extends JFrame{
 		
 		removestopwords.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!importStopwordsButton.isEnabled()) {
-					importStopwordsButton.setEnabled(true);
-					languageBox.setEnabled(true);
-					stopwords = true;
+				if(removestopwords.isSelected()) {
+						importStopwordsButton.setEnabled(true);
+						languageBox.setEnabled(true);
+						stopwords = true;
 				}else{
-					importStopwordsButton.setEnabled(false);
-					languageBox.setEnabled(false);
-					stopwords = false;
+						importedStopwords.setText("");
+						importStopwordsButton.setEnabled(false);
+						languageBox.setSelectedIndex(0);
+						languageBox.setEnabled(false);
+						stopwords = false;	
 				}
 				
 				
@@ -238,6 +242,7 @@ public class InitialFrame extends JFrame{
 			System.out.println(res);
 			filepath = res;
 			importedTextpath.setText(res);
+			drawButton.setEnabled(true);
 			}
 	}
 	
@@ -255,7 +260,7 @@ public class InitialFrame extends JFrame{
 			System.out.println(res);
 			
 			languageBox.setSelectedIndex(0);
-			language = "";
+			language = null;
 		}
 			
 	}
