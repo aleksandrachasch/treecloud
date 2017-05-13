@@ -25,6 +25,8 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import org.apache.batik.apps.rasterizer.SVGConverterException;
 import org.apache.batik.swing.JSVGCanvas;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.svg.SVGDocument;
 
 public class TreeCloudFrame extends JFrame{
@@ -335,5 +337,5 @@ public class TreeCloudFrame extends JFrame{
 		this.getContentPane().add(c);
 		this.setVisible(true);
 	}
-
+	
 }

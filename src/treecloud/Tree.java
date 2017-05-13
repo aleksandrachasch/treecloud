@@ -1,7 +1,10 @@
 package treecloud;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -95,30 +98,38 @@ public class Tree {
 	}
 	
 	
-	public String getStopWordsFile(String workinglanguage){
+	public InputStream getStopWordsFile(String workinglanguage, String stopwordspath) throws FileNotFoundException{
 		
-		if(workinglanguage.equals("English") | workinglanguage.equals("French")){
-			return this.getClass().getResource("/stoplists/StoplistEnglishFrench.txt").getPath();
+		if(workinglanguage == null & stopwordspath != null) {
+			InputStream stream = new FileInputStream(stopwordspath);
+			return stream;
 			
-		}else if(workinglanguage.equals("German")){
-			return "/stoplists/StoplistGerman.txt";
+		}else if(workinglanguage != null & stopwordspath == null) {
+			if(workinglanguage.equals("English") | workinglanguage.equals("French")){
+			return this.getClass().getResourceAsStream("/StoplistEnglishFrench.txt");
+			
+			}else if(workinglanguage.equals("German")){
+				return this.getClass().getResourceAsStream("/StoplistGerman.txt");
 		
-		}else if(workinglanguage.equals("Portuguese")){
-			return "/stoplists/StoplistPortuguese.txt";
+			}else if(workinglanguage.equals("Portuguese")){
+				return this.getClass().getResourceAsStream("/StoplistPortuguese.txt");
 		
-		}else if(workinglanguage.equals("Italian")){
-			return "/stoplists/StoplistItalian.txt";
+			}else if(workinglanguage.equals("Italian")){
+				return this.getClass().getResourceAsStream("/StoplistItalian.txt");
 			
-		}else if(workinglanguage.equals("Spanish")){
-			return "/stoplists/StoplistSpanish.txt";
+			}else if(workinglanguage.equals("Spanish")){
+				return this.getClass().getResourceAsStream("/StoplistSpanish.txt");
 			
-		}else if(workinglanguage.equals("Russian")){
-			return this.getClass().getResource("/stoplists/StoplistRussian.txt").getPath();
+			}else if(workinglanguage.equals("Russian")){
+				return this.getClass().getResourceAsStream("/StoplistRussian.txt");
+				}else{
+					return null;
+				}
+
 		}else{
 			JOptionPane.showMessageDialog(null, "Stopwords list is not available for this language. Stopwords will not be removed");
 			return null;
 		}
-		
 	}
 	
 	public void findFiles(String dir){   
@@ -157,23 +168,19 @@ public class Tree {
         txt.locatetarget = locatetarget;
         if(importtype == "text") {
         	if(removestopwords){
-        		if(stopwordsPath != null){
-        			leaves = txt.computeMatrixText(importedtext, stopwordsPath, numberoftaxa, colormode, winSize, step, formula);
-        		}else{
-        			leaves = txt.computeMatrixText(importedtext, getStopWordsFile(language), numberoftaxa, colormode, winSize, step, formula);
-        		}
+        			leaves = txt.computeMatrixText(importedtext, getStopWordsFile(language, stopwordsPath), numberoftaxa, colormode, winSize, step, formula);
         	}else{
         		leaves = txt.computeMatrixText(importedtext, null, numberoftaxa, colormode, winSize, step, formula);
         	}
         }else if(importtype == "Unitex"){
         	if(removestopwords){
-        		leaves = txt.computeMatrixNoStats(importedtext, getStopWordsFile(language), numberoftaxa, colormode, formula);
+        		leaves = txt.computeMatrixNoStats(importedtext, getStopWordsFile(language, stopwordsPath), numberoftaxa, colormode, formula);
         	}else{
         		leaves = txt.computeMatrixNoStats(importedtext, null, numberoftaxa, colormode, formula);
         	}
         }else{
         	if(removestopwords){
-        		leaves = txt.computeMatrixConcordance(importedtext, getStopWordsFile(language), numberoftaxa, colormode, formula);
+        		leaves = txt.computeMatrixConcordance(importedtext, getStopWordsFile(language, stopwordsPath), numberoftaxa, colormode, formula);
         	}else{
         		leaves = txt.computeMatrixConcordance(importedtext, null, numberoftaxa, colormode, formula);
         	}
@@ -196,7 +203,7 @@ public class Tree {
 		ea.doEqualAngle(nodes, numberoftaxa);
 	}
 	
-	public void drawTree(){
+	public void drawTree() throws IOException{
 		System.out.println("Drawing the tree...");
 		setSvgDoc(TreeSVG.drawTreeCloud(nodes, edgecolor));
 	}

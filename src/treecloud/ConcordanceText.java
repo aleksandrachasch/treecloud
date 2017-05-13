@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +16,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.swing.JOptionPane;
 
 
 
@@ -670,10 +673,10 @@ public class ConcordanceText {
      * @throws IOException
      */
     
-    public ArrayList<String> loadStopWords(String filepath) throws IOException{
+    public ArrayList<String> loadStopWords(InputStream stream) throws IOException{
     	ArrayList<String> stopwords = new ArrayList<String>();
     	
-    	FileInputStream stream = new FileInputStream(filepath);
+    	//FileInputStream stream = new FileInputStream(filepath);
     	BufferedReader bf = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
 
     	while(true){
@@ -699,38 +702,44 @@ public class ConcordanceText {
      */
     
     private ArrayList<Map<String, Double>> computeCooccurrenceColors(String theword, ArrayList<String> text, Map<String, Integer> keptWordsId, ArrayList<ArrayList<Double>> distance){
-    	ArrayList<Map<String, Double>> result = new ArrayList<Map<String, Double>>();
-    	Map<String, Double> positions = new HashMap<String, Double>();
-    	Map<String, Double> dispersion = new HashMap<String, Double>();
-    	//double themin = distance.get(0).get(1);
-    	//double themax = themin;
-    	
-    	ArrayList<String> keptWords = new ArrayList<String>(keptWordsId.keySet());
-    	
-    	for(String word : keptWords){
-    		if(!positions.containsKey(word)){
-    			double value = distance.get(keptWordsId.get(theword)).get(keptWordsId.get(word));
-    			positions.put(word, value);
-    		}
+    	if(!keptWordsId.containsKey(theword)){
+    		JOptionPane.showMessageDialog(null, "Target word is not present in the imported file. Please double check the target word you have entered.");
+    		return null;
+    	}else{
+	        ArrayList<Map<String, Double>> result = new ArrayList<Map<String, Double>>();
+	    	Map<String, Double> positions = new HashMap<String, Double>();
+	    	Map<String, Double> dispersion = new HashMap<String, Double>();
+	    	//double themin = distance.get(0).get(1);
+	    	//double themax = themin;
+	    	
+	    	ArrayList<String> keptWords = new ArrayList<String>(keptWordsId.keySet());
+	    	
+	    	for(String word : keptWords){
+	    		if(!positions.containsKey(word)){
+	    			double value = distance.get(keptWordsId.get(theword)).get(keptWordsId.get(word));
+	    			positions.put(word, value);
+	    		}
+	    	}
+	    	Set<Entry<String, Double>> items = positions.entrySet();
+	    	Map<Double, String> tmp = new HashMap<Double, String>();
+	    	for(Entry<String, Double> item : items){
+	    		tmp.put(item.getValue(), item.getKey());
+	    	}
+	    	ArrayList<String> words = new ArrayList<String>(keptWords);
+	    	int i = 0;
+	    	for(String word : words){
+	    		i += 1;
+	    		if(!word.equals(theword)){
+	    			positions.put(word, Math.floor(255D*i/words.size()));
+	    		}else{
+	    			positions.put(word, 0.0);
+	    		}
+	    	}
+	    	result.add(positions);
+	    	result.add(dispersion);
+	    	return result;
     	}
-    	Set<Entry<String, Double>> items = positions.entrySet();
-    	Map<Double, String> tmp = new HashMap<Double, String>();
-    	for(Entry<String, Double> item : items){
-    		tmp.put(item.getValue(), item.getKey());
-    	}
-    	ArrayList<String> words = new ArrayList<String>(keptWords);
-    	int i = 0;
-    	for(String word : words){
-    		i += 1;
-    		if(!word.equals(theword)){
-    			positions.put(word, Math.floor(255D*i/words.size()));
-    		}else{
-    			positions.put(word, 0.0);
-    		}
-    	}
-    	result.add(positions);
-    	result.add(dispersion);
-    	return result;
+
     }
     
     /**
@@ -835,6 +844,9 @@ public class ConcordanceText {
     		positions = locations.get(0);
     		dispersion = locations.get(1);
     	}
+    	/**
+    	 * TODO: fix the case when target word is not presented in the text
+    	 */
     	if(color.equals("Target")){
     		chronology += 1;
     		ArrayList<Map<String, Double>> locations = computeCooccurrenceColors(locatetarget, text, keptWordsId, distance);
@@ -908,7 +920,7 @@ public class ConcordanceText {
      * @return list of leaves of the tree (TreeNode)
      * @throws IOException
      */
-    public ArrayList<TreeNode> computeMatrixNoStats(String filepath, String stopwordspath, int nbwords, String color, String formula) throws IOException{
+    public ArrayList<TreeNode> computeMatrixNoStats(String filepath, InputStream stopwordspath, int nbwords, String color, String formula) throws IOException{
     	
     	if(nbwords == 0){
     		nbwords += 30;
@@ -1005,7 +1017,7 @@ public class ConcordanceText {
      * @return
      * @throws IOException
      */
-    public ArrayList<TreeNode> computeMatrixConcordance(String filepath, String stopwordspath, int nbwords, String color, String formula) throws IOException {
+    public ArrayList<TreeNode> computeMatrixConcordance(String filepath, InputStream stopwordspath, int nbwords, String color, String formula) throws IOException {
     	
     	if(nbwords == 0){
     		nbwords += 30;
@@ -1096,7 +1108,7 @@ public class ConcordanceText {
      * @throws IOException
      */
     
-    public ArrayList<TreeNode> computeMatrixText(String filepath, String stopwordspath, int nbwords, String color, int winSize, int step, String formula) throws IOException {
+    public ArrayList<TreeNode> computeMatrixText(String filepath, InputStream stopwordspath, int nbwords, String color, int winSize, int step, String formula) throws IOException {
     	
     	ArrayList<String> text = readText(filepath);
     	System.out.println("words: " + text);
