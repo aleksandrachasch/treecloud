@@ -2,20 +2,19 @@ package treecloud;
 
 
 
-import java.awt.BorderLayout;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import javax.swing.JFrame;
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 
-import org.apache.batik.dom.svg.SVGDOMImplementation;
-
-import org.apache.batik.swing.JSVGCanvas;
-import org.apache.batik.swing.JSVGScrollPane;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.svg.SVGDocument;
+import org.w3c.dom.NodeList;
 
 /**
  * Class used for generating and rendering SVG image of a tree
@@ -25,21 +24,48 @@ import org.w3c.dom.svg.SVGDocument;
 
 public class TreeSVG {
 	
+     final static String scr = "<![CDATA[var selectedElement = 0; var currentX = 0; var currentY = 0; var currentMatrix = 0; function selectElement(evt) { selectedElement = evt.target; currentX = evt.clientX; currentY = evt.clientY; currentMatrix = selectedElement.getAttributeNS(null, \"transform\").slice(7,-1).split(' '); for(var i=0; i<currentMatrix.length; i++) { currentMatrix[i] = parseFloat(currentMatrix[i]); } selectedElement.setAttributeNS(null, \"onmousemove\", \"moveElement(evt)\"); selectedElement.setAttributeNS(null, \"onmouseout\", \"deselectElement(evt)\"); selectedElement.setAttributeNS(null, \"onmouseup\", \"deselectElement(evt)\"); } function moveElement(evt) { var dx = evt.clientX - currentX; var dy = evt.clientY - currentY; currentMatrix[4] += dx; currentMatrix[5] += dy; selectedElement.setAttributeNS(null, \"transform\", \"matrix(\" + currentMatrix.join(' ') + \")\"); currentX = evt.clientX; currentY = evt.clientY; } function deselectElement(evt) { if(selectedElement != 0){ selectedElement.removeAttributeNS(null, \"onmousemove\"); selectedElement.removeAttributeNS(null, \"onmouseout\"); selectedElement.removeAttributeNS(null, \"onmouseup\"); selectedElement = 0; } } ]]>";
+	
+	
 	/**
 	 * Generate SVG file from tree data structure
 	 * @param nodes ArrayList of nodes of a tree
+	 * @throws IOException 
 	 * 
 	 */
 	
-	public static Document drawTreeCloud(ArrayList<TreeNode> nodes, String edgecolor){
+	public static String loadScript() throws IOException {
+		String res = "";
+		
+		FileInputStream stream = new FileInputStream("C:/Users/SONY/Documents/drag_script.txt");
+    	BufferedReader bufferedr = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+		while (true){
+			String line = bufferedr.readLine();
+			if (line == null) {
+				break;
+			}else{
+			    res += line;}
+			}
+		bufferedr.close();
+		
+		return res;
+	}
+	
+	public static Document drawTreeCloud(ArrayList<TreeNode> nodes, String edgecolor) throws IOException{
 		DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
 		String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 		Document doc = impl.createDocument(svgNS, "svg", null);
-		
+	
 		Element svgRoot = doc.getDocumentElement();
 		svgRoot.setAttributeNS(null, "width", "500");
 		svgRoot.setAttributeNS(null, "height", "500");
 		svgRoot.setAttributeNS(null, "viewBox", getViewBox(nodes));
+		
+		Element scr = doc.createElementNS(svgNS, "script");
+		scr.setAttributeNS(null, "type", "text/ecmascript");
+		scr.setTextContent(DragScript.getScript().getTextContent());
+		svgRoot.appendChild(scr);
+			
 		for(int i=0; i<nodes.size(); i++){
 	
 				Element path = doc.createElementNS(svgNS, "path");
@@ -53,54 +79,52 @@ public class TreeSVG {
 				if(nodes.get(i).isLeaf){
 					
 					Element text = doc.createElementNS(svgNS, "text");
-					text.setAttributeNS(null, "style" , "fill:" + nodes.get(i).fontcolor);
-					text.setAttributeNS(null, "font-size", nodes.get(i).fontsize);
-					text.setAttributeNS(null, "font-family", "Arial");
-					//text.setTextContent(nodes.get(i).name);
-					text.setAttributeNS(null, "class", "draggable");
-					text.setAttributeNS(null, "ID", "1");
-					text.setAttributeNS(null, "x", Double.toString(nodes.get(i).endX));
-					text.setAttributeNS(null, "y", Double.toString(nodes.get(i).endY));
-				
-					svgRoot.appendChild(text);
+				    text.setAttributeNS(null,"style" , "fill:" + nodes.get(i).fontcolor);
+					text.setAttributeNS(null,"font-size", nodes.get(i).fontsize);
+					text.setAttributeNS(null,"font-family", "Arial");
+					text.setTextContent(nodes.get(i).name);
+					text.setAttributeNS(null,"class", "draggable");
+					text.setAttributeNS(null,"ID", "1");
+					text.setAttributeNS(null,"x", Double.toString(nodes.get(i).endX));
+					text.setAttributeNS(null,"y", Double.toString(nodes.get(i).endY));
+				    text.setAttributeNS(null,"transform", "matrix(1 0 0 1 0 0)");
+				    text.setAttributeNS(null,"onmousedown", "selectElement(evt)");
+				    svgRoot.appendChild(text);
 					
 					if(nodes.get(i).angle >= Math.PI/4 & nodes.get(i).angle <= Math.PI*3/4){
 					
-						Element tspan = doc.createElementNS(svgNS, "tspan");
-						tspan.setAttributeNS(null, "style", "baseline-shift:sub");
-						tspan.setTextContent(nodes.get(i).name);
-						text.appendChild(tspan);
+						text.setAttributeNS(null,"y" , Double.toString(Double.parseDouble(text.getAttribute("y"))+5));
+						text.setTextContent(nodes.get(i).name);
 						
 						if(nodes.get(i).hasSisterLeaf){
-							text.setAttributeNS(null, "text-anchor" , "start");
-							text.setAttributeNS(null, "y",  Double.toString(nodes.get(i).endY+5));
+							text.setAttributeNS(null,"text-anchor" , "start");
+							text.setAttributeNS(null,"y",  Double.toString(nodes.get(i).endY+5));
 						}else{
-							text.setAttributeNS(null, "text-anchor" , "middle");
+							text.setAttributeNS(null,"text-anchor" , "middle");
 						}
 						}
 					
 					else if(nodes.get(i).angle >= Math.PI*3/4 & nodes.get(i).angle <= Math.PI*5/4){
 						text.setTextContent(nodes.get(i).name);
-						text.setAttributeNS(null, "text-anchor" , "end");
+						text.setAttributeNS(null,"text-anchor" , "end");
+						text.setAttributeNS(null,"y", Double.toString(nodes.get(i).endY));
 					}
 					
 					else if(nodes.get(i).angle >= Math.PI*5/4 & nodes.get(i).angle <= Math.PI*7/4){
-						Element tspan = doc.createElementNS(svgNS, "tspan");
-						tspan.setAttributeNS(null, "style", "baseline-shift:super");
-						tspan.setTextContent(nodes.get(i).name);
-						text.appendChild(tspan);
-						text.setAttributeNS(null, "text-anchor" , "middle");
+						text.setAttributeNS(null,"text-anchor" , "middle");
+						text.setAttributeNS(null,"y", Double.toString(Double.parseDouble(text.getAttribute("y"))-5));
+						text.setTextContent(nodes.get(i).name);
 						
 						if(nodes.get(i).hasSisterLeaf){
-							text.setAttributeNS(null, "text-anchor" , "end");
-							text.setAttributeNS(null, "y",  Double.toString(nodes.get(i).endY-6));
+							text.setAttributeNS(null,"text-anchor" , "end");
+							text.setAttributeNS(null,"y",  Double.toString(nodes.get(i).endY-6));
 						}else{
-							text.setAttributeNS(null, "text-anchor" , "middle");
+							text.setAttributeNS(null,"text-anchor" , "middle");
 						}
 					}
 					else{
 						text.setTextContent(nodes.get(i).name);
-						text.setAttributeNS(null, "text-anchor", "start");
+						text.setAttributeNS(null,"text-anchor", "start");
 						
 					}
 					
@@ -108,19 +132,10 @@ public class TreeSVG {
 			}
 				
 	}
-//    JSVGCanvas c = new JSVGCanvas();
-//	c.setSVGDocument((SVGDocument) doc);
-//	JSVGScrollPane scroll = new JSVGScrollPane(c);
-//	//scroll.add(c, BorderLayout.CENTER);
-//	
-//	
-//
-//	JFrame f = new JFrame("TreeCloud");
-//	f.setSize(500,500);
-//	
-//	f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//	f.getContentPane().add(c);
-//	f.setVisible(true);
+		
+	NodeList tmpp = doc.getElementsByTagName("script");
+	System.out.println("length of the imported: " + tmpp.getLength());
+	System.out.println("text of the importd: " + tmpp.item(0).getTextContent());
 	return doc;
 			}
 	
@@ -143,6 +158,5 @@ public class TreeSVG {
 				+ m;
 		return result;
 	}
-	
 	
 }
