@@ -17,7 +17,7 @@ public class DragScript {
 		String parser = XMLResourceDescriptor.getXMLParserClassName();
 		SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
 		//InputStream stream = new FileInputStream("C:/Users/SONY/Documents/diploma/treecloud-ruscorpora/resources/stoplists/script.svg");
-		InputStream stream = DragScript.class.getResourceAsStream("/rectangle.svg");
+		InputStream stream = DragScript.class.getResourceAsStream("/script.svg");
 		Document doc = f.createDocument("http://www.w3.org/2000/svg", "svg" ,"http://www.w3.org/2000/svg", stream);
 		System.out.println(doc.getDocumentElement().getTagName());
 		SVGDocument svgDoc = (SVGDocument) doc;
