@@ -176,8 +176,8 @@ public class TreeCloudFrame extends JFrame{
 		JMenuItem manual = new JMenuItem(new AbstractAction("TreeCloud Manual"){
 			public void actionPerformed(ActionEvent e){
 				try {
-					Desktop.getDesktop().open(new File("C:/ManualTreecloud.pdf"));
-				} catch (IOException e1) {
+					Desktop.getDesktop().open(new File(this.getClass().getResource("/ManualTreecloud.pdf").toURI()));
+				} catch (IOException | URISyntaxException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
